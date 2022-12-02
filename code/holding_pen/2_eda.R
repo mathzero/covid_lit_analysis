@@ -51,6 +51,15 @@ dat_text_titles$unique_id=as.character(rownames(dat_text_titles))
 # just check all unique IDs are present in the main data file
 setdiff(dat_text_titles$unique_id,dat$unique_id) # yep
  
+sarswords=c("2019-nCoV", "COVID-19","SARS-CoV-2", "HCoV-2019","hcov" , "NCOVID-19", 
+"severe acute respiratory syndrome coronavirus 2","SarsCoV2","COVID19","2019-nCov",
+"severe acute respiratory syndrome corona virus 2", "Wuhan coronavirus","China coronavirus",
+"Wuhan corona virus","China corona virus", "novel coronavirus","novel corona virus") 
+
+falsepos=grepl(pattern = paste(tolower(sarswords),collapse = "|"),x =dat$title_preferred,ignore.case = T )
+table(falsepos,dat$preprint)
+
+# 
 
 # 
 # ### Propely identify preprints

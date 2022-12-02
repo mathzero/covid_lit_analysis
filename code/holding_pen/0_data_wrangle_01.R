@@ -198,10 +198,6 @@ dat <- cbind(dat,split_cat)
 dat <- dat %>% select(-journal_subject,category_1,category_2)
 
 
-
-
-
-
 # Subsequent publication --------------------------------------------------
 
 
