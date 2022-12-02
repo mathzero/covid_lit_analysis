@@ -228,27 +228,27 @@ saveRDS(object = concepts_wide,file = "data/concepts_wide.rds")
 # library(dplyr)
 # knitr::kable(results %>% select(title, doi,  starts_with("cited")))
 # 
-
-
-### create empty data frame
-df.altmetric <- data.frame(matrix(nrow=0, ncol=0, dimnames=list(NULL,NULL)))
-
-### loop over all dois extracting altmetrics using rAltmetric package
-
-for (i in 1:length(ids)){
-  print(paste("Processing paper number",i))
-  dat <- suppressWarnings(try(altmetric_data(altmetrics(doi = ids[i])),silent = TRUE))
-  if(class(dat) == "try-error"){
-    df.altmetric[i,] <- NA
-  }
-  else{
-    df.altmetric <- smartbind(df.altmetric,dat)
-  }
-}
-
-### drop some variables
-altmetrics.keepvars  <-   names(df.altmetric)[!grepl("autho",names(df.altmetric))]
-altmetrics.keepvars <- setdiff(altmetrics.keepvars,c("title","doi", "journal","type"))
-
-df.full <- cbind(df.full,df.altmetric[,altmetrics.keepvars])
+# 
+# 
+# ### create empty data frame
+# df.altmetric <- data.frame(matrix(nrow=0, ncol=0, dimnames=list(NULL,NULL)))
+# 
+# ### loop over all dois extracting altmetrics using rAltmetric package
+# 
+# for (i in 1:length(ids)){
+#   print(paste("Processing paper number",i))
+#   dat <- suppressWarnings(try(altmetric_data(altmetrics(doi = ids[i])),silent = TRUE))
+#   if(class(dat) == "try-error"){
+#     df.altmetric[i,] <- NA
+#   }
+#   else{
+#     df.altmetric <- smartbind(df.altmetric,dat)
+#   }
+# }
+# 
+# ### drop some variables
+# altmetrics.keepvars  <-   names(df.altmetric)[!grepl("autho",names(df.altmetric))]
+# altmetrics.keepvars <- setdiff(altmetrics.keepvars,c("title","doi", "journal","type"))
+# 
+# df.full <- cbind(df.full,df.altmetric[,altmetrics.keepvars])
 
