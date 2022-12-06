@@ -14,6 +14,7 @@ library(furrr)
 library(tidyverse)
 source(file = "code/0_functions.R")
 
+
 # 3a. Altmetrics ----------------------------------------------------------
 
 dat_2020 <- read_csv(file="data/bq-results-20221124-2020.csv")
@@ -84,6 +85,8 @@ dat$abstract_preferred <- lapply(dat$abstract_preferred,stringi::stri_trans_gene
 dat$title_preferred=as.character(dat$title_preferred)
 dat$abstract_preferred=as.character(dat$abstract_preferred)
 
+
+
 # Preprints ---------------------------------------------------------------
 
 # The dimensions designation of preprint is imperfect, so we will identify others on the basis of journal name (and some prior knowledge)
@@ -108,7 +111,6 @@ table(dat$type,newpreprints, exclude="none")
 
 
 # Add impact factor -------------------------------------------------------
-
 
 if_data <- read_csv("data/Impactfactor2022.csv")
 if_data$journal_issn <- gsub("-","",if_data$issn)
@@ -314,6 +316,30 @@ dat_main$score %>% table(exclude="none")
 dat_main %>% ggplot(aes(x=score,y=altmetrics_score)) +geom_point()
 cor((dat_main$score),(dat_main$altmetrics_score),use = "complete.obs")
 
+
+
+# Subsequent publication --------------------------------------------------
+
+
+# get info on subsequent publication of preprints #
+dois_pub=unique(dat_main$resulting_publication_doi)
+dois_pub <- dois_pub[!is.na(dois_pub)]
+
+# get journal articles that were preprints
+dat_published_preprints=dat_main %>% filter(doi %in% dois_pub)
+names(dat_published_preprints)
+dat_published_preprints <- dat_published_preprints %>% select(doi,journal_title,altmetrics_score,
+                                                              date,citations_count,
+                                                              cites_per_day,journal_if_2022,journal_jci,
+                                                              journal_if_10,journal_if_5,
+                                                              journal_if_1,journal_if_any,
+                                                              journal_category_1)
+colnames(dat_published_preprints) <- paste0("subs_pub_",colnames(dat_published_preprints))
+
+# join with original data
+dat_main <- dat_main %>% left_join(dat_published_preprints, by = c("resulting_publication_doi"="subs_pub_doi"))
+
+
 # Save
 saveRDS(dat_main,file = "data/dat_main.rds")
 write_csv(x = filtering_df,file = "data/data_filtering.csv")
@@ -365,10 +391,9 @@ citations_long_suumary_2=citations_long %>% group_by(node_2) %>% summarise(n=n()
 
 # save
 saveRDS(citations_long,file = "data/citations_long.rds")
+saveRDS(citations_long,file = "data/citations.rds")
+
 # citations_long <- readRDS("data/citations_long.rds")
-
-
-
 
 
 
