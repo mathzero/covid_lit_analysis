@@ -88,18 +88,19 @@ top_terms
 # 
 gamma_terms <- td_gamma %>%
   group_by(topic) %>%
-  summarise(gamma = mean(gamma)) %>%
-  arrange(desc(gamma)) %>%
+  summarise(mean_gamma = mean(gamma)) %>%
+  arrange(desc(mean_gamma)) %>%
   left_join(top_terms, by = "topic") %>%
   mutate(topic = paste0("Topic ", topic),
-         topic = reorder(topic, gamma))
+         topic = reorder(topic, mean_gamma))
+
 # devtools::install_github("mathzero/OverReact")
 library(OverReact)
 
 # Plot terms by topic
 topics_plot=gamma_terms %>%
   slice_head(n=20) %>% 
-  ggplot(aes(topic, gamma, label = terms, fill = gamma)) +
+  ggplot(aes(topic, mean_gamma, label = terms, fill = mean_gamma)) +
   geom_col(show.legend = FALSE) +
   geom_text(hjust = 1, nudge_y = -0.0002, size = 2, col="white") +
   coord_flip() +
@@ -111,7 +112,7 @@ topics_plot=gamma_terms %>%
                                   family="IBMPlexSans-Bold"),
         plot.subtitle = element_text(size = 13)) +
   labs(x = NULL, y = expression(gamma),
-       title = "Topics by prevalence in published COVID-19 abstracts",
+       title = "Topics by prevalence in published COVID-19 papers",
        subtitle = "With the top 6 words that contribute to each topic")
 
 # view plot
@@ -123,12 +124,42 @@ OverReact::saveREACTplot(p = topics_plot,figpath = figpath,filename = "topic_gam
 
 
 
+# Violin plot of topics ---------------------------------------------------
+
+class(gamma_terms$topic)
+# Build plot (takes ages)
+p_topics_violin=td_gamma %>% 
+  left_join(top_terms, by = "topic") %>%
+  mutate(term_concat=(paste0("Topic ",topic,": ",terms)),
+         term_concat=factor(term_concat, levels=unique(term_concat)),
+         topic=factor(topic)) %>% 
+  left_join(gamma_terms, by = "topic") %>% 
+  ggplot(aes(y=reorder(term_concat,-mean_gamma), x=gamma)) +
+  geom_violin() + 
+  OverReact::theme_react() +
+  scale_x_log10() +
+  labs(y="", x= expression(gamma))
+
+
+# save
+OverReact::saveREACTplot(p = p_topics_violin,figpath = figpath,filename = "topic_gamma_violin_plot",
+                         width = 7,height = 15,savePDF = T)
+
+
+
+
+
+
+
 # Heatmap -----------------------------------------------------------------
 
 # get gamma matrix
 gamma_mat <- data.frame(unique_id=topic_model@documents,topic_model@gamma)
 colnames(gamma_mat) <- c("unique_id", paste0("topic_",1:ntopic))
 
+# get preprint matrix
+dat_preprint <- dat %>% filter(type=="preprint")
+
 # get preprint mat
 gamma_mat_preprint=gamma_mat %>% filter(unique_id %in% dat_preprint$unique_id)
 
@@ -136,27 +167,32 @@ gamma_mat_preprint=gamma_mat %>% filter(unique_id %in% dat_preprint$unique_id)
 # get preprint mat
 gamma_mat_preprint=gamma_mat %>% filter(unique_id %in% dat_preprint$unique_id)
 
-top_terms6 <- td_beta %>%
-  arrange(beta) %>%
-  dplyr::group_by(topic) %>%
-  top_n(6, beta) %>%
-  arrange(-beta) %>%
-  dplyr::select(topic, term) %>%
-  summarise(terms = list(term)) %>%
-  mutate(terms = map(terms, paste, collapse = ", ")) %>% 
-  unnest()
-top_terms6
 
 # get correlation matrix
-cormat=cor((gamma_mat_preprint[,2:71]))
+cormat=cor((gamma_mat[,2:61]))
 
 # add names
-rownames(cormat) = colnames(cormat) = paste0("Topic ",1:70,": ", top_terms$terms)
+rownames(cormat) = colnames(cormat) = paste0("Topic ",1:60,": ", top_terms$terms)
 
-myheatmap=ComplexHeatmap::Heatmap(cormat,row_dend_width = unit(3,"cm"),column_dend_height  = unit(3,"cm"))
+myheatmap=ComplexHeatmap::Heatmap(cormat,row_dend_width = unit(1,"cm"),column_dend_height  = unit(1,"cm"))
 myheatmap
 
 png(filename = paste0(figpath,"topic_heatmap.png"),width = 15,height = 15,units = "in",res = 300)
+myheatmap
+dev.off()
+
+
+
+# get correlation matrix
+cormat=cor((gamma_mat_preprint[,2:61]))
+
+# add names
+rownames(cormat) = colnames(cormat) = paste0("Topic ",1:60,": ", top_terms$terms)
+
+myheatmap=ComplexHeatmap::Heatmap(cormat,row_dend_width = unit(1,"cm"),column_dend_height  = unit(1,"cm"))
+myheatmap
+
+png(filename = paste0(figpath,"topic_heatmap_preprint.png"),width = 15,height = 15,units = "in",res = 300)
 myheatmap
 dev.off()
 
@@ -177,18 +213,18 @@ topic_summary_df=dat_join %>%
   group_by(month=lubridate::month(as.Date(date)),year=lubridate::year(as.Date(date))) %>% 
   summarise(across(topics,list(mean),na.rm=T))
 topic_summary_df$date <- lubridate::as_date(paste0(topic_summary_df$year,"-",topic_summary_df$month,"-1"),format="%Y-%m-%d")
-colnames(topic_summary_df)[3:72] <- paste0("Topic ",1:70,": ",top_terms$terms)
+colnames(topic_summary_df)[3:62] <- paste0("Topic ",1:60,": ",top_terms$terms)
 
 # Pivot for plotting
 topic_summary_df_long <- topic_summary_df %>% 
-  pivot_longer(cols =colnames(topic_summary_df)[3:72])
+  pivot_longer(cols =colnames(topic_summary_df)[3:62])
 
 # forate as date
 topic_summary_df_long$date=as.Date(topic_summary_df_long$date)
 
 # Plot
 p_topics=topic_summary_df_long %>% 
-  dplyr::filter(date>"2020-03-01", (grepl("58",name)| grepl("63",name) | grepl("28",name))) %>% 
+  dplyr::filter(date>"2020-03-01", (grepl("23",name)| grepl("21",name) |  grepl("59",name))) %>% 
   ggplot2::ggplot(aes(x=date,y=value, col=name)) +
   geom_point()+
   geom_line() +
@@ -210,12 +246,12 @@ dat_mod <- dat %>% left_join(td_gamma_wide, by =c("unique_id"="document")) %>%
   rename(date_published=date,
          published_in_journal=published
   ) %>% 
-  rename(article_type=preprint)
+  rename(article_type=type)
 
 # get sample of paper for clustering by 
 clust_mat <- td_gamma_wide  %>% 
   dplyr::select(-document) %>%
-  dplyr::sample_n(size = 10000) %>% 
+  dplyr::sample_n(size = 100) %>% 
   t() %>% 
   as.data.frame()
 

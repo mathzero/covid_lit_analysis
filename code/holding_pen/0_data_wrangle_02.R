@@ -1,6 +1,6 @@
 # clear env
 rm(list=ls())
-source("E:/Group/functions/load_packages.R")
+# source("E:/Group/functions/load_packages.R")
 source("E:/home/mw418/function_scripts/load_packages.R")
 
 load_packages(c("tidyverse","ggplot2","ggthemes", "tm",
@@ -93,8 +93,8 @@ makeTidyDF <- function(mydat,textvar,mincount=100,
 df_text_sparse_title <- makeTidyDF(mydat = dat,textvar = "title_preferred",mincount = 1000)
 df_text_sparse_abstract <- makeTidyDF(mydat = dat,textvar = "abstract_preferred",mincount = 10000)
 df_text_sparse_abstract_1000 <- makeTidyDF(mydat = dat,textvar = "abstract_preferred",mincount = 1000)
-df_text_sparse_abstract_preprint<- makeTidyDF(mydat = dat %>% filter(preprint=="Preprint") ,
-                                              textvar = "abstract_preferred",mincount = 1000)
+# df_text_sparse_abstract_preprint<- makeTidyDF(mydat = dat %>% filter(preprint=="Preprint") ,
+#                                               textvar = "abstract_preferred",mincount = 1000)
 
 
 df_text_sparse_abstract_1000@Dim
@@ -104,8 +104,9 @@ df_text_sparse_abstract@Dim
 ### Save ###
 saveRDS(list(df_text_sparse_title=df_text_sparse_title,
              df_text_sparse_abstract=df_text_sparse_abstract,
-             df_text_sparse_abstract_1000=df_text_sparse_abstract_1000,
-             df_text_sparse_abstract_preprint=df_text_sparse_abstract_preprint),
+             df_text_sparse_abstract_1000=df_text_sparse_abstract_1000
+             # df_text_sparse_abstract_preprint=df_text_sparse_abstract_preprint
+             ),
         file = "data/sparse_dfs_1000_min.rds")
 
 

@@ -44,10 +44,6 @@ dat <- readRDS("data/dat_main.rds")
 concepts <- read_csv("data/bq-results-20221124-concepts.csv")
 concepts_wide <- readRDS("data/concepts_wide.rds")
 
-# remove dupes
-dat=dat[!duplicated(dat$id),]
-
-
 # wrangle dat
 dat <- dat %>% mutate(abstract_available = case_when(is.na(abstract_preferred) ~ "Yes",
                                                      T ~ "No"),
@@ -123,44 +119,6 @@ OverReact::savePrettyExcelWorkbook(listOfTables = list(table_one=tab1,
 OverReact::saveREACTtable(tab = summary_category,outpath = outpath,filename = "journal_subject_metrics_summary")
 OverReact::saveREACTtable(tab = summary_journal,outpath = outpath,filename = "journal_metrics_summary")
 OverReact::saveREACTtable(tab = summary_concept,outpath = outpath,filename = "concept_metrics_summary")
-
-
-
-
-
-# Highest altmetric papers ------------------------------------------------
-
-dat_top_policy <- dat[order(dat$cited_by_policies_count,na.last = T,decreasing = T),][1:20,] %>% 
-  dplyr::select(title_preferred,journal_title,cited_by_policies_count,date_normal,published)
-
-# OverReact::saveREACTtable(tab = dat_top_altmetrics,outpath = outpath,filename = "top_20_policy",save_rds = F)
-
-dat_top_altmetrics <- dat[order(dat$altmetrics_score,na.last = T,decreasing = T),][1:20,] %>% 
-  dplyr::select(doi,title_preferred,journal_title,altmetrics_score,citations_count,date_normal,published)
-
-# OverReact::saveREACTtable(tab = dat_top_altmetrics,outpath = outpath,filename = "top_20_altmetrics",save_rds = F)
-
-
-dat_top_altmetrics_preprint <- dat[dat$type=="preprint",][order(dat$altmetrics_score[dat$type=="preprint"],na.last = T,decreasing = T),][1:20,] %>% 
-  dplyr::select(doi,title_preferred,journal_title,altmetrics_score,citations_count,date_normal,published)
-
-# OverReact::saveREACTtable(tab = dat_top_altmetrics_preprint,outpath = outpath,filename = "top_20_altmetrics_preprint",save_rds = F)
-
-# by citations
-dat_top_cites<-dat[order(dat$citations_count,na.last = T,decreasing = T),][1:20,] %>% 
-  dplyr::select(doi,title_preferred,journal_title,altmetrics_score,citations_count,date_normal,published)
-OverReact::saveREACTtable(tab = dat_top_cites,outpath = outpath,filename = "top_20_cites",save_rds = F)
-
-
-
-OverReact::savePrettyExcelWorkbook(listOfTables = list(dat_top_cites=dat_top_cites,
-                                                       dat_top_altmetrics=dat_top_altmetrics,
-                                                       dat_top_altmetrics_preprint=dat_top_altmetrics_preprint,
-                                                       dat_top_policy=dat_top_policy),
-                                   workbookName = "top_papers_by_cites_policy_altmetrics",outpath = outpath,
-                                   noDecimalsColumns = c("altmetrics_score","n_journals",
-                                                         "cited_by_policies_count"))
-
 
 
 

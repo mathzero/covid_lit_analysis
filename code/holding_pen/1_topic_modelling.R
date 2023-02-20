@@ -6,7 +6,7 @@ outpath <- paste0(getwd(),"/output/")
 figpath <- paste0(getwd(),"/plots/")
 datapath <- paste0(getwd(),"/data/")
 function_script_path ="E:/home/mw418/function_scripts/"
-function_script_path="/Users/mathzero/Library/CloudStorage/GoogleDrive-mattdwhitaker@gmail.com/My Drive/Imperial/PhD/REACT2_analysis_in_progress/RESULTS/function_scripts/"
+# function_script_path="/Users/mathzero/Library/CloudStorage/GoogleDrive-mattdwhitaker@gmail.com/My Drive/Imperial/PhD/REACT2_analysis_in_progress/RESULTS/function_scripts/"
 
 
 #' Source any functions from the local file
@@ -107,7 +107,7 @@ result_extended_again <- FindTopicsNumber(dtm = df_text_sparse,
                                           metrics = c("Griffiths2004","CaoJuan2009","Arun2010","Deveaud2014"),
                                           method="Gibbs",
                                           control = list(seed=123),
-                                          mc.cores=as.integer(40),
+                                          mc.cores=as.integer(80),
                                           return_models = T,
                                           verbose = 10
 )
@@ -126,6 +126,20 @@ optmisation_plot <- FindTopicsNumber_plot(result_extended_again)
 
 
 
+# Personal optimisation plot
+opt_plot=results_df %>% ggplot(aes(x=K, y=Deveaud2014)) +
+  geom_point() +
+  geom_point(data = results_df[which.max(results_df$Deveaud2014),],shape=1, size=5, col="red") +
+  geom_line() +
+  geom_hline(yintercept = 1,linetype="dashed",col="red") +
+  geom_vline(xintercept = results_df$K[which.max(results_df$Deveaud2014)],linetype="dashed",col="red") +
+  OverReact::theme_react() +
+  labs(x="Number of topics (K)",y="Jenson-Shannon divergence (normalised to 1-max)")
+
+# save
+OverReact::saveREACTplot(p = opt_plot,figpath =figpath,filename ="topic_model_opt_K_plot",width =  5,height = 4)
+
+
 # extract modes
 mods <- result_extended_again$LDA_model
 
@@ -135,7 +149,7 @@ opt_k_indx=which.max(results_df$Deveaud2014)
 # optimal number of topics
 opt_k=results_df$K[opt_k_indx]
 
-# choose 100-$topic model
+# choose 60-topic model
 topic_model <-mods[[opt_k_indx]]
 
 
