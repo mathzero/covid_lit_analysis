@@ -17,7 +17,7 @@ library(rAltmetric)
 #' https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
 #' Register here: https://account.ncbi.nlm.nih.gov/
 
-api_key <- "9dcee77ca1568147752529c6fa3bb9118f08"
+api_key <- ""
 
 # Write query
 query <- "COVID-19*[Title/Abstract] OR SARS-CoV-2*[Title/Abstract] 
