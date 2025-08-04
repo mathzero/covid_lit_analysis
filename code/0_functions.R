@@ -62,7 +62,7 @@ runUnivariate <- function(mydat, preprint_filter=c("Journal article","Preprint")
   registerDoParallel(cl)
   
   univ_citerate_reg <- foreach(i=1:n, .combine = rbind, 
-                               .packages = c("tidyverse","reshape2",
+                               .packages = c("tidyverse","reshape2","broom",
                                              "tidytext","tidyr")) %dopar% {
                                                df_out <- univ_df[,c(1,splits[[i]])] %>% 
                                                  reshape2::melt(id.vars = "y") %>% 
@@ -139,7 +139,7 @@ runUnivariate <- function(mydat, preprint_filter=c("Journal article","Preprint")
 
 # which(colnames(univ_df)=="outcome")
 # Plot univariate
-plotUnivariate <- function(univ_citerate_reg){
+plotUnivariate <- function(univ_citerate_reg,textsize = 3,wraplength=10){
   # univ_citerate_reg <- univ_citerate_reg  %>% 
   #   arrange(desc(p.value)) %>% 
   #   group_by(journal) %>% 
@@ -159,9 +159,9 @@ plotUnivariate <- function(univ_citerate_reg){
                                 p.value <=0.05 ~ "p<0.05",
                                 T ~"Not significant"), 
                       levels = c("Not significant","p<0.05","FDR<0.05")))%>% 
-    ggplot(aes(x=(estimate),y=-log10(p.value), col = sig, label=label)) +
+    ggplot(aes(x=(estimate),y=-log10(p.value), col = sig, label=stringr::str_wrap(label,wraplength))) +
     geom_point() +
-    ggrepel::geom_text_repel(col = "black", size = 1.5) +
+    ggrepel::geom_text_repel(col = "black", size =textsize) +
     theme_adjust+
     theme_bw() +
     {if("journal"%in%colnames(univ_citerate_reg))
@@ -179,7 +179,6 @@ plotUnivariate <- function(univ_citerate_reg){
 
 
 
-# modells -----------------------------------------------------------------
 
 
 
@@ -516,6 +515,8 @@ PermuteCatboostParallel <- function(mymodel,X, y, nperm = 100, lossmeasure="auc"
 # function to plot ROCS
 plotReactROC <- function(list_of_preds=NULL,
                          events=NULL,
+                         palette = "cool",
+                         myCols=c("#960078","#003E74","#02893B","#DD2501"),
                          title ="A ROC curve",
                          subtitle ="Plotted on some dummy data"){
   
@@ -556,8 +557,11 @@ plotReactROC <- function(list_of_preds=NULL,
     geom_line(aes(x=sp, y=se, col = model)) +
     scale_x_reverse() +
     OverReact::theme_react(subtitle_size = 10) +
-    OverReact::scale_color_imperial(palette = "cool") +
-    OverReact::scale_fill_imperial(palette = "cool") +
+    scale_fill_manual(values = myCols)+
+    scale_colour_manual(values = myCols)+
+    # 
+    # OverReact::scale_color_imperial(palette = palette) +
+    # OverReact::scale_fill_imperial(palette = palette) +
     geom_ribbon(aes(x=sp, ymin=lower, ymax = upper, fill = model), alpha=0.2)+
     labs(x="Specificity", y="Sensitivity", col = "", fill = "") +
     theme(legend.position = c(0.7,0.19)) +
